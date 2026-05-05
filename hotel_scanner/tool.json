@@ -1,0 +1,39 @@
+{
+  "ironclaw_config": {
+    "clean_context": false,
+    "required_keys": ["RAPIDAPI_KEY"]
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "hotel_scanner",
+      "description": "MANDATORY: Use this to search live hotel inventory. You MUST extract location, checkin_date, checkout/nights, and adults. Output ONLY the JSON parameters. Do NOT include 'thought' or reasoning blocks.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "description": "The specific city or town (e.g., 'Reykjavík')."
+          },
+          "checkin_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD format."
+          },
+          "checkout_date": {
+            "type": "string",
+            "description": "YYYY-MM-DD format. Use this if the user provides a specific date range."
+          },
+          "nights": {
+            "type": "integer",
+            "description": "Use this ONLY if the user says 'for X nights'."
+          },
+          "adults": {
+            "type": "integer",
+            "description": "The number of adults staying."
+          }
+        },
+        "required": ["location", "checkin_date", "adults"]
+      }
+    }
+  }
+}

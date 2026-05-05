@@ -1,0 +1,23 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "system_navigator",
+      "description": "Queries the macOS Accessibility Tree to find the exact X,Y coordinates of Dock icons or system elements. Use this BEFORE attempting a click with gui_automator for system apps.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "element_name": {
+            "type": "string",
+            "description": "The exact name of the app or element (e.g., 'Finder', 'Google Chrome')."
+          }
+        },
+        "required": ["element_name"]
+      }
+    }
+  }
+}

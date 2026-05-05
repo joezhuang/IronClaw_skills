@@ -1,0 +1,40 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "gui_automator",
+      "description": "Interacts with the macOS graphical user interface. Use 'screenshot' to capture the current screen state. Use 'click' to interact with UI elements at specific X/Y coordinates. Use 'type' to input text into the currently focused field.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["screenshot", "click", "type"],
+            "description": "The GUI action to perform."
+          },
+          "x": {
+            "type": "integer",
+            "description": "The X coordinate on the screen (Required if action is 'click')."
+          },
+          "y": {
+            "type": "integer",
+            "description": "The Y coordinate on the screen (Required if action is 'click')."
+          },
+          "text": {
+            "type": "string",
+            "description": "The text string to type (Required if action is 'type')."
+          },
+          "target_to_find": {
+            "type": "string",
+            "description": "Interacts with the macOS graphical user interface. Use 'screenshot' to capture the screen. CRITICAL: If you are trying to find a specific UI element to click (like a search bar or icon), you MUST include the 'target_to_find' parameter DURING the screenshot action. Use 'click' to interact with UI elements at specific X/Y coordinates. Use 'type' to input text into the currently focused field."
+          }
+        },
+        "required": ["action"]
+      }
+    }
+  }
+}

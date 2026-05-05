@@ -1,0 +1,19 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "system_locator",
+      "description": "Returns the physical location (City/Region) of the host machine.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "required": []
+      }
+    }
+  }
+}

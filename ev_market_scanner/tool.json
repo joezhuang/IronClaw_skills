@@ -1,0 +1,24 @@
+{
+  "ironclaw_config": {
+    "clean_context": false,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "ev_market_scanner",
+      "description": "Trigger this to scan live EV market news and pricing updates. Use this whenever the user asks about specific car brands.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_brands": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "REQUIRED. Extract every car brand or company mentioned into an array of strings. Example: If user says 'Look up Acme and Globex', output ['Acme', 'Globex']."
+          }
+        },
+        "required": ["target_brands"]
+      }
+    }
+  }
+}

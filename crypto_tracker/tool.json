@@ -1,0 +1,27 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": ["COINGECKO_API_KEY"]
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "crypto_tracker",
+      "description": "Use this tool to get real-time cryptocurrency prices, market caps, and 24h trends.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "coin_id": {
+            "type": "string",
+            "description": "The full name or ID of the coin (e.g., 'bitcoin', 'ethereum', 'solana')."
+          },
+          "vs_currency": {
+            "type": "string",
+            "description": "The target currency. Defaults to 'aud'."
+          }
+        },
+        "required": ["coin_id"]
+      }
+    }
+  }
+}

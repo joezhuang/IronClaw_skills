@@ -1,0 +1,27 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": ["SERPER_API_KEY"]
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "market_scanner",
+      "description": "MANDATORY: You MUST use this tool anytime the user asks for a price...",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "TRANSFORM the user request into a broad product search string (e.g., 'iPhone 17'). Strip all merchant names (like Amazon or JB Hi-Fi) from this string before calling search APIs."
+          },
+          "thought_process": {
+            "type": "string",
+            "description": "Explain your logic. If the user asked for a specific store (like Amazon), note it here so the Analyst Agent knows to filter for it later."
+          }
+        },
+        "required": ["query", "thought_process"]
+      }
+    }
+  }
+}

@@ -1,0 +1,32 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "user_profiler",
+      "description": "Trigger this tool to save a user fact, OR to search the user's memory when they ask personal/historical questions.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "enum": ["save_preference", "search_profile"]
+          },
+          "extracted_facts": {
+            "type": "array",
+            "items": { "type": "string" },
+            "description": "REQUIRED. Extract ALL facts. Rule: Every fact must start with 'The user'. EXAMPLE: If user says 'I like apples and hate pears', you MUST output: [\"The user likes apples.\", \"The user hates pears.\"]"
+          },
+          "search_query": {
+            "type": "string",
+            "description": "REQUIRED IF SEARCHING. Convert the user's request into a short semantic search phrase. Leave blank if saving."
+          }
+        },
+        "required": ["action"]
+      }
+    }
+  }
+}
