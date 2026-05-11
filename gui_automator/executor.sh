@@ -8,6 +8,9 @@ TEXT=$(python3 -c "import sys, json; print(json.loads(sys.argv[1]).get('text', '
 
 case "$ACTION" in
     "screenshot")
+        # ⏱️ UI BUFFER: Wait 1 second just in case a transition is happening
+        sleep 1
+
         # Capture screen silently (-x) without shadow to a temporary file
         FILE_PATH="/tmp/ironclaw_screen.jpg"
         screencapture -x "$FILE_PATH"
@@ -23,6 +26,10 @@ case "$ACTION" in
     "click")
         if [ -n "$X" ] && [ -n "$Y" ]; then
             /opt/homebrew/bin/cliclick c:$X,$Y
+
+            # ⏱️ UI BUFFER: Force the Go Relay to wait for the Mac to open the app/menu
+            sleep 2
+            
             echo "Successfully clicked at X:$X, Y:$Y"
         else
             echo "Error: Missing X or Y coordinates for click action."
