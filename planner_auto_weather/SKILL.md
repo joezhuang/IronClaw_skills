@@ -2,7 +2,7 @@
 
 ## TRIGGER
 
-Whenever the user asks for weather or related without a city.
+Whenever the user asks for weather or the related without a city.
 
 ## PHASE 1: DISCOVER LOCATION
 

@@ -1,0 +1,23 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": ["TAVILY_API_KEY"]
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "web_search",
+      "description": "Performs a live internet search to find up-to-date facts, news, or URLs.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The exact search query to look up on the internet."
+          }
+        },
+        "required": ["query"]
+      }
+    }
+  }
+}
