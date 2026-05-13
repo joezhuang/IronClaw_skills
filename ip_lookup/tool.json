@@ -1,0 +1,23 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "ip_lookup",
+      "description": "Fetches location and ISP organization data for a public IP address.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "ip_address": {
+            "type": "string",
+            "description": "The IPv4 address to investigate."
+          }
+        },
+        "required": ["ip_address"]
+      }
+    }
+  }
+}

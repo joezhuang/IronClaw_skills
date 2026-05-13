@@ -1,0 +1,19 @@
+{
+  "ironclaw_config": {
+    "clean_context": true,
+    "required_keys": []
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "get_active_connections",
+      "description": "Returns a list of apps currently making active connections to the internet, and their target IP addresses.",
+      "parameters": {
+        "type": "object",
+        "properties": {},
+        "additionalProperties": false,
+        "required": []
+      }
+    }
+  }
+}

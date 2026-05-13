@@ -13,10 +13,20 @@ else
     EXEC_CMD="python3"
 fi
 
+# 3. Auto-fix for macOS sqlite limitations (Installs sqlean into the .venv if missing)
+$EXEC_CMD -c "import sqlean" 2>/dev/null || $EXEC_CMD -m pip install sqlean.py --quiet
+
 # We pass $1 (The JSON Payload) AND $SCRIPT_DIR to Python
 $EXEC_CMD - "$1" "$SCRIPT_DIR" << 'EOF'
 import sys, json, urllib.request, struct, os
-import sqlite3
+
+# 👇 NEW: Apple Silicon compatible SQLite engine 👇
+try:
+    import sqlean as sqlite3
+except ImportError:
+    import sqlite3
+# 👆 --------------------------------------------- 👆
+
 import sqlite_vec
 
 # sys.argv[1] is the JSON payload. sys.argv[2] is the SCRIPT_DIR we passed from Bash.
