@@ -1,16 +1,19 @@
 #!/bin/bash
 
-# Uses lsof to find ESTABLISHED connections, ignores local network chatter, 
-# and formats it cleanly to AppName -> RemoteIP. Grabs the top 8.
-lsof -i -P -n | grep ESTABLISHED | grep -e "->" | \
-grep -v -e '127.0.0.1' -e '192.168.' -e '10.0.' -e '::1' -e 'fe80:' | \
-awk '{
-    # Extract App Name ($1) and the Connection ($9)
-    split($9, parts, "->");
-    remote = parts[2];
-    # Strip the port (the part after the last colon)
+lsof -i -P -n | grep ESTABLISHED | awk '{
+    split($9, conn, "->");
+    remote = conn[2];
     sub(/:[0-9]+$/, "", remote);
-    # Strip brackets from IPv6 addresses for a cleaner look
     gsub(/[\[\]]/, "", remote);
-    print $1 " -> " remote
-}' | head -n 8
+
+    # Filter out Local/Loopback/Link-Local
+    if (remote !~ /^(127\.|10\.|192\.168\.|172\.(1[6-9]|2[0-9]|3[0-1])\.|fe80:|::1)/ && remote != "") {
+        
+        # Build the curl command directly. 
+        # We use \" to escape quotes for the grep pattern.
+        cmd = "curl -s https://ipinfo.io/" remote "/json | grep -E \"(hostname|city|region|country|org)\"";
+        
+        printf "%-15s -> %-15s | ", $1, remote;
+        system(cmd);
+    }
+}' | sort | uniq

@@ -7,7 +7,7 @@
     "type": "function",
     "function": {
       "name": "get_active_connections",
-      "description": "Returns a list of apps currently making active connections to the internet, and their target IP addresses.",
+      "description": "Returns active internet connections. It automatically provides the App Name, Target IP, and the geographic/organization data (ISP/Company) for each connection.",
       "parameters": {
         "type": "object",
         "properties": {},
