@@ -1,0 +1,20 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "create_new_skill",
+      "description": "Delegates skill creation to the Qwen Coder sub-agent.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "skill_name": { "type": "string" },
+          "coder_instructions": {
+            "type": "string",
+            "description": "Instructions for the Coder on what the bash script should do."
+          }
+        },
+        "required": ["skill_name", "coder_instructions"]
+      }
+    }
+  }
+}
