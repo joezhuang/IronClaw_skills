@@ -1,0 +1,26 @@
+{
+  "ironclaw_config": {
+    "clean_context": true
+  },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "fuel_near_me",
+      "description": "Finds the cheapest fuel within a specified radius using geographic coordinates. Defaults to showing all fuel types.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "lat": { "type": "number" },
+          "lon": { "type": "number" },
+          "radius": { "type": "integer" },
+          "fuel_type": {
+            "type": "string",
+            "enum": ["all", "E10", "U91", "P95", "P98", "DL", "PDL", "LPG"],
+            "description": "The type of fuel to search for. 'all' returns all available types."
+          }
+        },
+        "required": ["lat", "lon", "radius"]
+      }
+    }
+  }
+}

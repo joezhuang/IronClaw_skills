@@ -1,0 +1,20 @@
+{
+  "ironclaw_config": { "clean_context": true },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "geographic_translator",
+      "description": "Finds latitude and longitude coordinates for a provided suburb name using a web-based geocoding search.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "suburb_name": {
+            "type": "string",
+            "description": "The name of the suburb or area to locate (e.g., 'Bondi', 'Brooklyn')."
+          }
+        },
+        "required": ["suburb"]
+      }
+    }
+  }
+}

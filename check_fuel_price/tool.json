@@ -1,1 +1,0 @@
-{"ironclaw_config":{"clean_context":false},"tool_schema":{"type":"function","function":{"name":"check_fuel_price","description":"A reusable tool to check the current average fuel price for a specified city and currency.","parameters":{"type":"object","properties":{"city_name":{"type":"string"},"currency":{"type":"string"}},"required":["city_name","currency"]}}}}
