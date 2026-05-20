@@ -1,0 +1,30 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "x_engagement_bot",
+      "description": "Scrapes the X timeline or posts a reply to a specific tweet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "action": {
+            "type": "string",
+            "description": "'scrape' to read timeline, 'reply' to post a comment."
+          },
+          "target_url": {
+            "type": "string",
+            "description": "The URL of the tweet to reply to (required if action is 'reply')."
+          },
+          "reply_text": {
+            "type": "string",
+            "description": "The AI-generated text to post (required if action is 'reply')."
+          }
+        },
+        "required": ["action"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true
+  }
+}
