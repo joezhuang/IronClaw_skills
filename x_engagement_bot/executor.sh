@@ -49,9 +49,19 @@ async def run_x_bot():
             page = await context.new_page()
 
             if action == "scrape":
-                await page.goto("https://x.com/home")
-                # 👈 Change this line from "https://x.com/home" to your List URL if needed
-                # await page.goto("https://x.com/i/lists/2056906333920837714")
+                # await page.goto("https://x.com/home")
+                # # 👈 Change this line from "https://x.com/home" to your List URL if needed
+                # # await page.goto("https://x.com/i/lists/2056906333920837714")
+
+                # 🎲 Flip a coin to choose between Home and the Custom List
+                feed_urls = [
+                    "https://x.com/home",
+                    "https://x.com/i/lists/2056906333920837714"
+                ]
+                chosen_feed = random.choice(feed_urls)
+                
+                print(f"🎯 Randomly selected feed for this run: {chosen_feed}")
+                await page.goto(chosen_feed)
                 
                 await asyncio.sleep(10)
                 articles = await page.query_selector_all("article")
