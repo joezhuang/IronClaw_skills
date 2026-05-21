@@ -2,7 +2,7 @@
 
 ## TRIGGER
 
-Whenever the user asks to "run the Twitter bot," "engage on X," or "check my timeline," OR whenever the automated cron scheduler fires the background webhook.
+Whenever the user asks to "run the Twitter bot," "x bot", "engage on X," or "check my timeline," OR Twitter, X or x related bot scheduler fires the background webhook.
 
 ## PHASE 1: GATHER DATA
 
