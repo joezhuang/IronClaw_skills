@@ -1,0 +1,26 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "post_x_reply",
+      "description": "Posts an AI-generated reply directly to a specific target tweet.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_url": {
+            "type": "string",
+            "description": "The exact URL of the tweet to reply to."
+          },
+          "reply_text": {
+            "type": "string",
+            "description": "The drafted text to post."
+          }
+        },
+        "required": ["target_url", "reply_text"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": false
+  }
+}
