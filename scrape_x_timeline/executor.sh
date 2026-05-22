@@ -1,11 +1,18 @@
 #!/bin/bash
 
+# 1. Automatically load and export variables from a .env file (if it exists)
+if [ -f .env ]; then
+    export $(cat .env | grep -v '^#' | xargs)
+fi
+
+# 2. Setup Python Environment
 if [ -n "$SKILL_VENV_PATH" ] && [ -f "$SKILL_VENV_PATH" ]; then
     EXEC_CMD="$SKILL_VENV_PATH"
 else
     EXEC_CMD="python3"
 fi
 
+# 3. Execute the Python logic
 "$EXEC_CMD" - <<'EOF'
 import sys
 import json
@@ -23,6 +30,16 @@ import sys
 import random
 from playwright.async_api import async_playwright
 
+def get_feed_urls():
+    news_lists = os.getenv('X_NEWS_LISTS')
+    feed_urls = os.getenv('X_FEED_URLS')
+    
+    target_env = news_lists if news_lists else feed_urls
+    if target_env:
+        clean_str = target_env.strip().strip('"').strip("'")
+        return [url.strip() for url in clean_str.split(',') if url.strip()]
+    return ["https://x.com/home"]
+
 async def run_scrape():
     try:
         chrome_data_dir = os.path.expanduser("~/ironclaw_chrome_profile")
@@ -36,16 +53,16 @@ async def run_scrape():
             
             page = await context.new_page()
             
-            feed_urls = ["https://x.com/home", "https://x.com/i/lists/2056906333920837714"]
+            feed_urls = get_feed_urls()
             chosen_feed = random.choice(feed_urls)
             print(f"🎯 Selected feed: {chosen_feed}")
             
-            await page.goto(chosen_feed)
-            await asyncio.sleep(6)
+            await page.goto(chosen_feed, wait_until="domcontentloaded")
+            await asyncio.sleep(4)
             
-            for _ in range(4):
+            for _ in range(3):
                 await page.mouse.wheel(0, 900)
-                await asyncio.sleep(2.0)
+                await asyncio.sleep(1.5)
             
             articles = await page.query_selector_all("article")
             if not articles:
@@ -53,40 +70,29 @@ async def run_scrape():
                 await context.close()
                 return
 
-            for i, article in enumerate(articles[:10]):
-                try:
-                    btn = await article.query_selector('[data-testid="tweet-text-show-more-link"]')
-                    if btn:
-                        await btn.click(force=True)
-                        await asyncio.sleep(0.5)
-                except Exception: pass
-                    
+            # Capped at 8 posts. Fast scout only.
+            for i, article in enumerate(articles[:5]):
                 text = await article.inner_text()
+                
+                # BULLETPROOF URL EXTRACTOR: Target the timestamp link directly
                 url = "Unknown URL"
-                links = await article.query_selector_all("a[href*='/status/']")
-                if links: url = f"https://x.com{await links[0].get_attribute('href')}"
-
-                article_context = ""
                 try:
-                    card_link = await article.query_selector('div[data-testid="card.wrapper"] a')
-                    if card_link:
-                        ext_url = await card_link.get_attribute("href")
-                        if ext_url and "x.com" not in ext_url and "twitter.com" not in ext_url:
-                            new_tab = await context.new_page()
-                            try:
-                                await new_tab.goto(ext_url, timeout=8000)
-                                summary = await new_tab.evaluate('''() => {
-                                    let meta = document.querySelector('meta[name="description"]');
-                                    let content = meta ? meta.content : document.title;
-                                    if(content.toLowerCase().includes("subscribe") || content.toLowerCase().includes("paywall")) return "PAYWALL DETECTED";
-                                    return content;
-                                }''')
-                                article_context = f"\n\n[BOT X-RAY: {summary}]"
-                            except Exception: pass
-                            finally: await new_tab.close()
-                except Exception: pass
+                    time_el = await article.query_selector("time")
+                    if time_el:
+                        # The parent <a> tag of the timestamp is ALWAYS the exact status permalink
+                        parent = await time_el.evaluate_handle("el => el.parentElement")
+                        href = await parent.get_attribute("href")
+                        if href:
+                            url = f"https://x.com{href}" if href.startswith("/") else href
+                except Exception: 
+                    pass
 
-                print(f"--- Post {i+1} ---\nURL: {url}\n{text}{article_context}\n{'-'*30}")
+                # Aggressive text truncation (max 250 chars) to prevent context bloat
+                clean_text = text.replace('\n', ' ')
+                short_text = clean_text[:250] + "..." if len(clean_text) > 250 else clean_text
+
+                # Notice there is no external X-Ray link scraping here anymore!
+                print(f"--- Post {i+1} ---\nURL: {url}\n{short_text}\n{'-'*30}")
             
             await context.close()
     except Exception as e:

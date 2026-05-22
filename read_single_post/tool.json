@@ -1,0 +1,23 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "read_single_post",
+      "description": "Navigates to a specific X (Twitter) post, expands the full text, and reads any linked external articles in deep detail. Use this AFTER selecting a target from the timeline, but BEFORE generating a reply.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_url": {
+            "type": "string",
+            "description": "The exact URL of the X post to read."
+          }
+        },
+        "required": ["target_url"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true,
+    "auto_summarize": true
+  }
+}

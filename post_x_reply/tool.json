@@ -21,6 +21,6 @@
     }
   },
   "ironclaw_config": {
-    "clean_context": false
+    "clean_context": true
   }
 }
