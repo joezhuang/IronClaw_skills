@@ -40,9 +40,19 @@ def get_feed_urls():
         return [url.strip() for url in clean_str.split(',') if url.strip()]
     return ["https://x.com/home"]
 
+def get_memory_log():
+    # Load previously engaged URLs into a set for fast lookup
+    log_path = os.path.expanduser("~/ironclaw_engaged_urls.log")
+    if not os.path.exists(log_path):
+        return set()
+    with open(log_path, "r", encoding="utf-8") as f:
+        return set(line.strip() for line in f if line.strip())
+
 async def run_scrape():
     try:
         chrome_data_dir = os.path.expanduser("~/ironclaw_chrome_profile")
+        engaged_urls = get_memory_log()
+        
         async with async_playwright() as p:
             context = await p.chromium.launch_persistent_context(
                 user_data_dir=chrome_data_dir,
@@ -70,16 +80,19 @@ async def run_scrape():
                 await context.close()
                 return
 
-            # Capped at 8 posts. Fast scout only.
-            for i, article in enumerate(articles[:5]):
+            valid_posts_found = 0
+            
+            # Iterate through articles until we find 5 UNENGAGED posts
+            for article in articles:
+                if valid_posts_found >= 5:
+                    break
+                    
                 text = await article.inner_text()
-                
-                # BULLETPROOF URL EXTRACTOR: Target the timestamp link directly
                 url = "Unknown URL"
+                
                 try:
                     time_el = await article.query_selector("time")
                     if time_el:
-                        # The parent <a> tag of the timestamp is ALWAYS the exact status permalink
                         parent = await time_el.evaluate_handle("el => el.parentElement")
                         href = await parent.get_attribute("href")
                         if href:
@@ -87,13 +100,25 @@ async def run_scrape():
                 except Exception: 
                     pass
 
-                # Aggressive text truncation (max 250 chars) to prevent context bloat
+                # 🛑 THE MEMORY FILTER: Skip if we've already engaged
+                if url in engaged_urls:
+                    continue
+
+                # 🛑 THE RADIOACTIVE SOURCE FILTER: Skip violent/tragic news entirely
+                lower_text = text.lower()
+                radioactive_words = ["dead", "die", "dies", "fatal", "killed", "gunfire", "shooting", "explosion", "casualty", "attack", "strike", "missile", "war", "murder"]
+                if any(word in lower_text for word in radioactive_words):
+                    continue
+
                 clean_text = text.replace('\n', ' ')
                 short_text = clean_text[:250] + "..." if len(clean_text) > 250 else clean_text
 
-                # Notice there is no external X-Ray link scraping here anymore!
-                print(f"--- Post {i+1} ---\nURL: {url}\n{short_text}\n{'-'*30}")
+                print(f"--- Post {valid_posts_found+1} ---\nURL: {url}\n{short_text}\n{'-'*30}")
+                valid_posts_found += 1
             
+            if valid_posts_found == 0:
+                print("Timeline exhausted. All recent posts have already been engaged with.")
+                
             await context.close()
     except Exception as e:
         print(f"Error: {e}", file=sys.stderr)

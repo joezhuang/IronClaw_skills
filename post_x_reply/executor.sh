@@ -110,6 +110,23 @@ async def run_reply():
                 
                 print(f"\n{'='*30}\n✅ POST COMPLETE\n💬 Reply: {reply_text}\n🤖 {status}\n{'='*30}\n")
 
+                # 🛑 THE MEMORY LOG: Save successful target URL and prune
+                log_path = os.path.expanduser("~/ironclaw_engaged_urls.log")
+                
+                # 1. Append the new URL
+                with open(log_path, "a", encoding="utf-8") as f:
+                    f.write(f"{clean_url}\n")
+
+                # 2. Enforce the 200-line limit (First-In, First-Out)
+                try:
+                    with open(log_path, "r", encoding="utf-8") as f:
+                        lines = f.readlines()
+                    if len(lines) > 200:
+                        with open(log_path, "w", encoding="utf-8") as f:
+                            f.writelines(lines[-200:]) # Keep only the most recent 200
+                except Exception as e:
+                    print(f"Warning: Failed to prune memory log: {e}", file=sys.stderr)
+
             else:
                 # Add this explicit failure catch!
                 print(f"Error: Could not find the reply button. The URL might be broken or 404: {clean_url}", file=sys.stderr)

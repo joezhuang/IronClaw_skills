@@ -1,0 +1,22 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "submit_for_review",
+      "description": "Submits a drafted Briefly News tweet for automated system review. You MUST wait for the system to return a pass/fail grade.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "draft_text": {
+            "type": "string",
+            "description": "The exact text you intend to post to X. Must include your emojis and a hook."
+          }
+        },
+        "required": ["draft_text"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true
+  }
+}
