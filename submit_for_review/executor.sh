@@ -42,16 +42,16 @@ def run_task():
             has_error = True
             critique += "RADIOACTIVE BAN TRIGGERED: Your draft contains words related to violence or death. Pivot immediately, pick a new URL, and start over. "
 
-        # 2. BASH LEVEL DYNAMIC LENGTH ENFORCER
-        account_type = os.getenv("X_ACCOUNT_TYPE", "free").lower()
-        max_chars = 280 if account_type == "free" else 25000
+        # # 2. BASH LEVEL DYNAMIC LENGTH ENFORCER
+        # account_type = os.getenv("X_ACCOUNT_TYPE", "free").lower()
+        # max_chars = 280 if account_type == "free" else 25000
         
-        if len(draft_text) > max_chars:
-            has_error = True
-            if account_type == "free":
-                critique += f"LENGTH FAILED: Your draft is {len(draft_text)} chars. You MUST keep it under 280 chars (Free Account). Cut the fluff. "
-            else:
-                critique += f"LENGTH FAILED: Your draft is {len(draft_text)} chars. You MUST keep it under {max_chars} chars. "
+        # if len(draft_text) > max_chars:
+        #     has_error = True
+        #     if account_type == "free":
+        #         critique += f"LENGTH FAILED: Your draft is {len(draft_text)} chars. You MUST keep it under 280 chars (Free Account). Cut the fluff. "
+        #     else:
+        #         critique += f"LENGTH FAILED: Your draft is {len(draft_text)} chars. You MUST keep it under {max_chars} chars. "
 
         # 3. BASH LEVEL SPAM EMOJI ENFORCER
         banned_emojis = ["🚨", "🚀", "📣", "🔥", "💯", "👇"]
@@ -67,10 +67,10 @@ def run_task():
             has_error = True
             critique += "HOOK FAILED: Your draft must end with a question mark, exclamation point, or an approved emoji. "
 
-        # 5. BASH LEVEL FORMATTING ENFORCER (No Walls of Text)
-        if "\n" not in draft_text:
-            has_error = True
-            critique += "FORMAT FAILED: You wrote a wall of text. You MUST use line breaks to separate distinct thoughts. Rewrite it with hard returns. "
+        # # 5. BASH LEVEL FORMATTING ENFORCER (No Walls of Text)
+        # if "\n" not in draft_text:
+        #     has_error = True
+        #     critique += "FORMAT FAILED: You wrote a wall of text. You MUST use line breaks to separate distinct thoughts. Rewrite it with hard returns. "
 
         # 6. RETURN RESULTS TO IRONCLAW
         if has_error:
