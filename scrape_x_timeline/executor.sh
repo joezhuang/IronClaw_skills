@@ -100,6 +100,10 @@ async def run_scrape():
                 except Exception: 
                     pass
 
+                # 🛑 THE NEW LINK FILTER: If there is no valid URL, skip the post entirely
+                if url == "Unknown URL" or not url:
+                    continue
+
                 # 🛑 THE MEMORY FILTER: Skip if we've already engaged
                 if url in engaged_urls:
                     continue
@@ -118,6 +122,13 @@ async def run_scrape():
             
             if valid_posts_found == 0:
                 print("Timeline exhausted. All recent posts have already been engaged with.")
+            else:
+                # 🛑 THE RECENCY ANCHOR: Force the AI into Phase 2
+                print("\n" + "="*40)
+                print("🛑 SYSTEM COMMAND: PHASE 1 COMPLETE.")
+                print("You are now in PHASE 2. You are strictly FORBIDDEN from generating conversational text.")
+                print("You MUST immediately execute the `read_single_post` tool. Use the `reasoning` parameter to evaluate the posts, then pass the `target_url`.")
+                print("="*40)
                 
             await context.close()
     except Exception as e:

@@ -3,16 +3,20 @@
     "type": "function",
     "function": {
       "name": "submit_for_review",
-      "description": "Submits a drafted Briefly News tweet for automated system review. You MUST wait for the system to return a pass/fail grade.",
+      "description": "Submits a drafted Briefly News tweet for automated system review.",
       "parameters": {
         "type": "object",
         "properties": {
+          "reasoning": {
+            "type": "string",
+            "description": "CRITICAL: Write exactly 'Line 1: [Text]. Line 2: [Empty]. Line 3: [Text]. Line 4: [Empty]. Line 5: [Text]' to build your layout."
+          },
           "draft_text": {
             "type": "string",
-            "description": "The exact text you intend to post to X. Must include your emojis and a hook."
+            "description": "The final text. You MUST press Enter twice between each thought so it matches your reasoning layout."
           }
         },
-        "required": ["draft_text"]
+        "required": ["reasoning", "draft_text"]
       }
     }
   },

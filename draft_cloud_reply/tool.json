@@ -1,0 +1,23 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "draft_cloud_reply",
+      "description": "Sends the extracted article facts to a high-intelligence Cloud LLM to draft the cynical 3-line tweet. Use this immediately after receiving the article context from read_single_post.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "article_context": {
+            "type": "string",
+            "description": "The exact text or summary extracted from the previous read_single_post step."
+          }
+        },
+        "required": ["article_context"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true,
+    "auto_summarize": false
+  }
+}

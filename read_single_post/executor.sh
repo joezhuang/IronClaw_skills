@@ -110,46 +110,6 @@ async def run_read(target_url):
             except Exception as e: 
                 pass # Fail silently and rely on the default "No external link found."
             
-            # # Look for an external article card
-            # try:
-            #     card_link = await main_article.query_selector('div[data-testid="card.wrapper"] a')
-            #     if card_link:
-            #         ext_url = await card_link.get_attribute("href")
-            #         if ext_url and "x.com" not in ext_url and "twitter.com" not in ext_url:
-            #             print(f"🔗 Found external link, reading...", file=sys.stderr)
-            #             new_tab = await context.new_page()
-            #             try:
-            #                 # Wait slightly longer to ensure React/Next.js hydration completes
-            #                 await new_tab.goto(ext_url, timeout=15000, wait_until="domcontentloaded")
-            #                 await asyncio.sleep(4)
-                            
-            #                 article_data = await new_tab.evaluate('''() => {
-            #                     let title = document.title;
-            #                     let meta = document.querySelector('meta[name="description"]');
-            #                     let desc = meta ? meta.content : "";
-                                
-            #                     // 🛑 THE DOM CLEANSING: Remove garbage elements before reading
-            #                     let junkSelectors = ['nav', 'footer', 'aside', 'header', '.sidebar', '.menu', '.cookie-banner', '#cookie-consent', '.newsletter', '.ad-container', '[role="navigation"]'];
-            #                     document.querySelectorAll(junkSelectors.join(',')).forEach(el => el.remove());
-                                
-            #                     // 🛑 THE CONTENT HEURISTIC: Target main wrappers
-            #                     let container = document.querySelector('article') || 
-            #                                     document.querySelector('main') || 
-            #                                     document.querySelector('.story-body') || 
-            #                                     document.querySelector('.article-body') || 
-            #                                     document.body; 
-                                
-            #                     // innerText grabs exactly what is visible to the human eye, ignoring hidden text
-            #                     let rawText = container.innerText || "";
-                                
-            #                     return `TITLE: ${title}\\nDESC: ${desc}\\n\\nBODY:\\n${rawText}`.substring(0, 6000);
-            #                 }''')
-            #                 result["article_context"] = article_data
-            #             except Exception as e:
-            #                 result["article_context"] = f"Failed to load external article: {str(e)}"
-            #             finally:
-            #                 await new_tab.close()
-            # except Exception: pass
             
             await context.close()
             return result
@@ -181,6 +141,16 @@ if __name__ == '__main__':
     if "error" in output and output["error"]:
         print(json.dumps({"status": "error", "errors": output["error"]}))
     else:
-        final_text = f"--- RAW POST CONTENT ---\n{output['post_text']}\n\n--- DEEP ARTICLE READ ---\n{output['article_context']}"
+        article_text = output.get('article_context', '')
+        
+        # 🛑 THE BAILOUT INTERCEPTOR
+        # If no link was found, output ONLY the bailout string.
+        # This completely hides the "DEEP ARTICLE READ" trigger from the LLM.
+        if "No external link found" in article_text:
+            final_text = "🛑 BAILOUT: NO EXTERNAL LINK FOUND"
+        else:
+            # 🛑 MEMORY PATCH: Inject the URL at the very top of the payload
+            final_text = f"TARGET_URL: {target_url}\n--- RAW POST CONTENT ---\n{output['post_text']}\n\n--- DEEP ARTICLE READ ---\n{article_text}"
+            
         print(json.dumps({"status": "success", "data": final_text.strip(), "errors": ""}))
 EOF
