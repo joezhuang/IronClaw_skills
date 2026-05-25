@@ -168,9 +168,9 @@ if __name__ == '__main__':
         # Stop execution if we didn't successfully extract both pieces
         if not target_url or not reply_text:
             print(json.dumps({
-                "status": "error", 
-                "logs": f"JSON Parse Error: {parse_error}", 
-                "errors": f"RAW PAYLOAD RECEIVED: {raw_input}"
+                "status": "format_warning", 
+                "logs": "REJECTED: You forgot to include the target_url.", 
+                "errors": "You MUST call this tool again and include BOTH the target_url and reply_text."
             }))
             return
 
