@@ -16,6 +16,7 @@ import sys
 import os
 import json
 import urllib.request
+import time # Make sure this is imported at the top
 
 def run_draft():
     try:
@@ -53,66 +54,116 @@ Rule 3: Keep it strictly under 250 characters."""
         prompt_text = f"Read this article and draft the tweet:\n{article_context}"
         cloud_draft = ""
 
-        # 4. Route the API Request
-        try:
-            if provider == "google":
-                api_url = f"{endpoint.rstrip('/')}/{model}:generateContent?key={api_key}"
-                payload = {
-                    "system_instruction": {"parts": [{"text": system_prompt}]},
-                    "contents": [{"parts": [{"text": prompt_text}]}],
-                    "generationConfig": {"temperature": 0.7}
-                }
-                req = urllib.request.Request(api_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
-                with urllib.request.urlopen(req, timeout=15) as response:
-                    result = json.loads(response.read().decode('utf-8'))
-                    cloud_draft = result['candidates'][0]['content']['parts'][0]['text'].strip()
+        # 4. Route the API Request with built-in RETRY logic
+        max_attempts = 3
+        cloud_draft = ""
+        
+        for attempt in range(max_attempts):
+            try:
+                if provider == "google":
+                    api_url = f"{endpoint.rstrip('/')}/{model}:generateContent?key={api_key}"
+                    payload = {
+                        "system_instruction": {"parts": [{"text": system_prompt}]},
+                        "contents": [{"parts": [{"text": prompt_text}]}],
+                        "generationConfig": {"temperature": 0.7}
+                    }
+                    req = urllib.request.Request(api_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        result = json.loads(response.read().decode('utf-8'))
+                        cloud_draft = result['candidates'][0]['content']['parts'][0]['text'].strip()
 
-            elif provider == "openai" or provider == "groq":
-                payload = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": prompt_text}
-                    ],
-                    "temperature": 0.7
-                }
-                headers = {
-                    'Content-Type': 'application/json',
-                    'Authorization': f'Bearer {api_key}'
-                }
-                req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
-                with urllib.request.urlopen(req, timeout=15) as response:
-                    result = json.loads(response.read().decode('utf-8'))
-                    cloud_draft = result['choices'][0]['message']['content'].strip()
+                elif provider == "openai" or provider == "groq":
+                    payload = {
+                        "model": model,
+                        "messages": [
+                            {"role": "system", "content": system_prompt},
+                            {"role": "user", "content": prompt_text}
+                        ],
+                        "temperature": 0.7
+                    }
+                    headers = {
+                        'Content-Type': 'application/json',
+                        'Authorization': f'Bearer {api_key}'
+                    }
+                    req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
+                    with urllib.request.urlopen(req, timeout=15) as response:
+                        result = json.loads(response.read().decode('utf-8'))
+                        cloud_draft = result['choices'][0]['message']['content'].strip()
+                else:
+                    print(json.dumps({"status": "error", "errors": f"Unsupported provider: {provider}"}))
+                    return
+                
+                # If it succeeds, break out of the retry loop
+                break 
+
+            except Exception as e:
+                if attempt < max_attempts - 1:
+                    print(f"⚠️ [DEBUG] Cloud timeout, retrying {attempt + 1}/{max_attempts}...", file=sys.stderr)
+                    time.sleep(3) # Wait 3 seconds before retrying
+                else:
+                    print(json.dumps({"status": "error", "errors": f"Cloud drafting failed after {max_attempts} attempts: {str(e)}"}))
+                    return
+
+        # # 4. Route the API Request
+        # try:
+        #     if provider == "google":
+        #         api_url = f"{endpoint.rstrip('/')}/{model}:generateContent?key={api_key}"
+        #         payload = {
+        #             "system_instruction": {"parts": [{"text": system_prompt}]},
+        #             "contents": [{"parts": [{"text": prompt_text}]}],
+        #             "generationConfig": {"temperature": 0.7}
+        #         }
+        #         req = urllib.request.Request(api_url, data=json.dumps(payload).encode('utf-8'), headers={'Content-Type': 'application/json'})
+        #         with urllib.request.urlopen(req, timeout=15) as response:
+        #             result = json.loads(response.read().decode('utf-8'))
+        #             cloud_draft = result['candidates'][0]['content']['parts'][0]['text'].strip()
+
+        #     elif provider == "openai" or provider == "groq":
+        #         payload = {
+        #             "model": model,
+        #             "messages": [
+        #                 {"role": "system", "content": system_prompt},
+        #                 {"role": "user", "content": prompt_text}
+        #             ],
+        #             "temperature": 0.7
+        #         }
+        #         headers = {
+        #             'Content-Type': 'application/json',
+        #             'Authorization': f'Bearer {api_key}'
+        #         }
+        #         req = urllib.request.Request(endpoint, data=json.dumps(payload).encode('utf-8'), headers=headers)
+        #         with urllib.request.urlopen(req, timeout=15) as response:
+        #             result = json.loads(response.read().decode('utf-8'))
+        #             cloud_draft = result['choices'][0]['message']['content'].strip()
             
-            else:
-                print(json.dumps({"status": "error", "errors": f"Unsupported provider: {provider}"}))
-                return
+        #     else:
+        #         print(json.dumps({"status": "error", "errors": f"Unsupported provider: {provider}"}))
+        #         return
 
-            # 🛑 MEMORY PATCH: Extract the URL from the incoming context to keep the chain alive
-            target_url_line = ""
-            for line in article_context.split('\n'):
-                if line.startswith("TARGET_URL:"):
-                    target_url_line = line.strip()
-                    break
+        #     # 🛑 MEMORY PATCH: Extract the URL from the incoming context to keep the chain alive
+        #     target_url_line = ""
+        #     for line in article_context.split('\n'):
+        #         if line.startswith("TARGET_URL:"):
+        #             target_url_line = line.strip()
+        #             break
 
-            # 🛑 VISUAL VERIFICATION LOGGER (Prints to terminal)
-            print("\n" + "═"*50, file=sys.stderr)
-            print("📝 [DEBUG] CLOUD MODEL DRAFT GENERATED:", file=sys.stderr)
-            print("═"*50, file=sys.stderr)
-            print(cloud_draft, file=sys.stderr)
-            print("═"*50 + "\n", file=sys.stderr)
+        #     # 🛑 VISUAL VERIFICATION LOGGER (Prints to terminal)
+        #     print("\n" + "═"*50, file=sys.stderr)
+        #     print("📝 [DEBUG] CLOUD MODEL DRAFT GENERATED:", file=sys.stderr)
+        #     print("═"*50, file=sys.stderr)
+        #     print(cloud_draft, file=sys.stderr)
+        #     print("═"*50 + "\n", file=sys.stderr)
 
-            # 5. Output Success back to IronClaw, ensuring the URL rides along
-            if target_url_line:
-                final_text = f"{target_url_line}\n--- FAST TRACK DRAFT ---\n{cloud_draft}"
-            else:
-                final_text = f"--- FAST TRACK DRAFT ---\n{cloud_draft}"
+        #     # 5. Output Success back to IronClaw, ensuring the URL rides along
+        #     if target_url_line:
+        #         final_text = f"{target_url_line}\n--- FAST TRACK DRAFT ---\n{cloud_draft}"
+        #     else:
+        #         final_text = f"--- FAST TRACK DRAFT ---\n{cloud_draft}"
                 
-            print(json.dumps({"status": "success", "data": final_text, "errors": ""}))
+        #     print(json.dumps({"status": "success", "data": final_text, "errors": ""}))
                 
-        except Exception as e:
-            print(json.dumps({"status": "error", "errors": f"Cloud drafting failed: {str(e)}"}))
+        # except Exception as e:
+        #     print(json.dumps({"status": "error", "errors": f"Cloud drafting failed: {str(e)}"}))
 
     except Exception as e:
         print(json.dumps({"status": "error", "errors": f"Script error: {str(e)}"}))
