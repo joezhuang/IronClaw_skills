@@ -174,6 +174,9 @@ if __name__ == '__main__':
             }))
             return
 
+        # 🌟 THE FIX: Unescape literal '\n' characters into real line breaks
+        reply_text = reply_text.replace('\\n', '\n')
+
         # Get the account type from the environment (default to 'free')
         account_type = os.getenv("X_ACCOUNT_TYPE", "free")
         
