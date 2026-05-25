@@ -11,6 +11,7 @@ import sys
 import json
 import os
 import subprocess
+import codecs # Add this at the very top of your file with the other imports
 
 def truncate_reply(text, limit=280):
     # 1. If it's already short enough, return it
@@ -175,7 +176,7 @@ if __name__ == '__main__':
             return
 
         # 🌟 THE FIX: Unescape literal '\n' characters into real line breaks
-        reply_text = reply_text.replace('\\n', '\n')
+        reply_text = codecs.decode(reply_text, 'unicode_escape')
 
         # Get the account type from the environment (default to 'free')
         account_type = os.getenv("X_ACCOUNT_TYPE", "free")
