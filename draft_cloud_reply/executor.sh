@@ -98,10 +98,12 @@ Rule 3: Keep it strictly under 250 characters."""
 
             except Exception as e:
                 if attempt < max_attempts - 1:
-                    print(f"⚠️ [DEBUG] Cloud timeout, retrying {attempt + 1}/{max_attempts}...", file=sys.stderr)
-                    time.sleep(3) # Wait 3 seconds before retrying
+                    # Fix: Print to standard out so Go doesn't panic and kill the script early
+                    print(f"⚠️ [DEBUG] Cloud timeout, retrying {attempt + 1}/{max_attempts}...")
+                    time.sleep(3)
                 else:
-                    print(json.dumps({"status": "error", "errors": f"Cloud drafting failed after {max_attempts} attempts: {str(e)}"}))
+                    # If all 3 fail, output the JSON error to trigger the Master Prompt's kill switch
+                    print(json.dumps({"status": "error", "errors": f"Cloud drafting failed after 3 attempts: {str(e)}"}))
                     return
 
         # # 4. Route the API Request
