@@ -13,6 +13,7 @@ import os
 import subprocess
 import codecs # Add this at the very top of your file with the other imports
 import random
+import re  # 👈 ADD THIS HERE
 
 def truncate_reply(text, limit=280):
     # 1. If it's already short enough, return it
@@ -296,6 +297,10 @@ if __name__ == '__main__':
         # reply_text = codecs.decode(reply_text, 'unicode_escape')
 
         # 🌟 THE ENCODING SANITIZER 
+
+        # 👇 ADD THIS NEW LINE: Fixes literal \u2014 escaping from the LLM
+        reply_text = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), reply_text)
+        
         # 1. Repair "Mojibake" (turns \u00e2\u0080\u0094 back into an em-dash)
         try:
             reply_text = reply_text.encode('latin-1').decode('utf-8')
