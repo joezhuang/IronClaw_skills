@@ -12,6 +12,7 @@ import json
 import os
 import subprocess
 import codecs # Add this at the very top of your file with the other imports
+import random
 
 def truncate_reply(text, limit=280):
     # 1. If it's already short enough, return it
@@ -42,6 +43,7 @@ import os
 import sys
 import random
 from playwright.async_api import async_playwright
+# from playwright_stealth import stealth_async # 🌟 Add this import
 
 async def run_reply():
     try:
@@ -66,72 +68,188 @@ async def run_reply():
             
             page = await context.new_page()
             print(f"▶️ Navigating to: {clean_url}")
+            # await stealth_async(page) # 🌟 Apply stealth BEFORE navigating!
+
+            # 🌟 THE FIX: Use triple single quotes (''') here!
+            await page.add_init_script('''
+                // 1. Hide the WebDriver flag
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                // 2. Mock the Chrome runtime object
+                window.navigator.chrome = { runtime: {} };
+                // 3. Mock languages and plugins
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            ''')
+
             await page.goto(clean_url)
-            await asyncio.sleep(5)
+            # await asyncio.sleep(5)
+            await asyncio.sleep(random.uniform(3.2, 6.8))
             
             await page.keyboard.press("Escape")
-            await asyncio.sleep(1.5)
+            # await asyncio.sleep(1.5)
+            await asyncio.sleep(random.uniform(1.1, 2.4))
             
             try:
                 close_btns = await page.query_selector_all('[aria-label="Close"]')
                 for btn in close_btns:
                     if await btn.is_visible():
                         await btn.click(force=True)
-                        await asyncio.sleep(1.0)
+                        # await asyncio.sleep(1.0)
+                        await asyncio.sleep(random.uniform(0.9, 1.6))
             except Exception: pass
 
+            # reply_btn = await page.query_selector('[data-testid="reply"]')
+            # if reply_btn:
+            #     await reply_btn.click(force=True)
+            #     # await asyncio.sleep(2)
+            #     await asyncio.sleep(random.uniform(1.5, 2.7))
+                
+            #     box = await page.wait_for_selector('[data-testid="tweetTextarea_0"]', timeout=5000)
+            #     # await box.type(reply_text, delay=random.randint(10, 40))
+            #     await box.type(reply_text, delay=random.randint(50, 150))
+                
+            #     print("⏳ Waiting 40s for review...")
+            #     # await asyncio.sleep(40)
+            #     await asyncio.sleep(random.uniform(30, 45))
+
+            #     active = True
+            #     while active:
+            #         try:
+            #             curr = await box.input_value()
+            #             # await asyncio.sleep(5)
+            #             await asyncio.sleep(random.uniform(3.2, 6.8))
+            #             new = await box.input_value()
+            #             if curr != new:
+            #                 print("⌨️ User typing... +20s")
+            #                 # await asyncio.sleep(20)
+            #                 await asyncio.sleep(random.uniform(15, 23))
+            #             else: active = False
+            #         except Exception: active = False
+                
+            #     try:
+            #         submit = await page.wait_for_selector('[data-testid="tweetButton"]', timeout=3000)
+            #         await submit.click(force=True)
+            #         status = "Auto-submitted"
+            #     except Exception: status = "Manually submitted/edited"
+                
+            #     print(f"\n{'='*30}\n✅ POST COMPLETE\n💬 Reply: {reply_text}\n🤖 {status}\n{'='*30}\n")
+
+            #     # 🛑 THE MEMORY LOG: Save successful target URL and prune
+            #     log_path = os.path.expanduser("~/ironclaw_engaged_urls.log")
+                
+            #     # 1. Append the new URL
+            #     with open(log_path, "a", encoding="utf-8") as f:
+            #         f.write(f"{clean_url}\n")
+
+            #     # 2. Enforce the 200-line limit (First-In, First-Out)
+            #     try:
+            #         with open(log_path, "r", encoding="utf-8") as f:
+            #             lines = f.readlines()
+            #         if len(lines) > 200:
+            #             with open(log_path, "w", encoding="utf-8") as f:
+            #                 f.writelines(lines[-200:]) # Keep only the most recent 200
+            #     except Exception as e:
+            #         print(f"Warning: Failed to prune memory log: {e}", file=sys.stderr)
+
+            # else:
+            #     # Add this explicit failure catch!
+            #     print(f"Error: Could not find the reply button. The URL might be broken or 404: {clean_url}", file=sys.stderr)
+            #     sys.exit(1)
+
+            # reply_btn = await page.query_selector('[data-testid="reply"]')
+            
+            # if reply_btn:
+            #     print("🎯 Reply button found. Hijacking thread...")
+            #     await reply_btn.click(force=True)
+            #     final_post_text = reply_text
+            # else:
+            #     print(f"⚠️ Reply button missing (Locked/Deleted). Falling back to standalone post...")
+            #     # 🌟 FALLBACK ROUTE: Navigate to the global compose window
+            #     await page.goto("https://x.com/compose/tweet")
+            #     await asyncio.sleep(random.uniform(4.1, 6.5))
+            #     # Append the URL so the standalone post makes sense to your followers
+            #     final_post_text = f"{reply_text}\n\nSource: {clean_url}"
+
+            # # --- SHARED POSTING LOGIC (Works for both Replies and Standalone) ---
+            # # Wait for the text box to appear (both compose modes use the same ID)
+            # box = await page.wait_for_selector('[data-testid="tweetTextarea_0"]', timeout=5000)
+            
+            # # Type out the text (either just the reply, or the reply + link)
+            # await box.type(final_post_text, delay=random.randint(50, 150))
+            
+            # print("⏳ Waiting 40s for review...")
+            # await asyncio.sleep(random.uniform(30, 45))
+
             reply_btn = await page.query_selector('[data-testid="reply"]')
+            
             if reply_btn:
+                print("🎯 Reply button found. Hijacking thread...")
                 await reply_btn.click(force=True)
-                await asyncio.sleep(2)
                 
-                box = await page.wait_for_selector('[data-testid="tweetTextarea_0"]', timeout=5000)
-                await box.type(reply_text, delay=random.randint(10, 40))
+                # 🌟 FIX 1: Wait for X's reply pop-up animation to finish!
+                await asyncio.sleep(random.uniform(1.8, 2.7))
                 
-                print("⏳ Waiting 40s for review...")
-                await asyncio.sleep(40)
-
-                active = True
-                while active:
-                    try:
-                        curr = await box.input_value()
-                        await asyncio.sleep(5)
-                        new = await box.input_value()
-                        if curr != new:
-                            print("⌨️ User typing... +20s")
-                            await asyncio.sleep(20)
-                        else: active = False
-                    except Exception: active = False
-                
-                try:
-                    submit = await page.wait_for_selector('[data-testid="tweetButton"]', timeout=3000)
-                    await submit.click(force=True)
-                    status = "Auto-submitted"
-                except Exception: status = "Manually submitted/edited"
-                
-                print(f"\n{'='*30}\n✅ POST COMPLETE\n💬 Reply: {reply_text}\n🤖 {status}\n{'='*30}\n")
-
-                # 🛑 THE MEMORY LOG: Save successful target URL and prune
-                log_path = os.path.expanduser("~/ironclaw_engaged_urls.log")
-                
-                # 1. Append the new URL
-                with open(log_path, "a", encoding="utf-8") as f:
-                    f.write(f"{clean_url}\n")
-
-                # 2. Enforce the 200-line limit (First-In, First-Out)
-                try:
-                    with open(log_path, "r", encoding="utf-8") as f:
-                        lines = f.readlines()
-                    if len(lines) > 200:
-                        with open(log_path, "w", encoding="utf-8") as f:
-                            f.writelines(lines[-200:]) # Keep only the most recent 200
-                except Exception as e:
-                    print(f"Warning: Failed to prune memory log: {e}", file=sys.stderr)
-
+                final_post_text = reply_text
             else:
-                # Add this explicit failure catch!
-                print(f"Error: Could not find the reply button. The URL might be broken or 404: {clean_url}", file=sys.stderr)
-                sys.exit(1)
+                print(f"⚠️ Reply button missing (Locked/Deleted). Falling back to standalone post...")
+                # 🌟 FALLBACK ROUTE: Navigate to the global compose window
+                await page.goto("https://x.com/compose/tweet")
+                await asyncio.sleep(random.uniform(4.1, 6.5))
+                # Append the URL so the standalone post makes sense to your followers
+                final_post_text = f"{reply_text}\n\nSource: {clean_url}"
+
+            # --- SHARED POSTING LOGIC (Works for both Replies and Standalone) ---
+            # Wait for the text box to appear (both compose modes use the same ID)
+            box = await page.wait_for_selector('[data-testid="tweetTextarea_0"]', timeout=5000)
+            
+            # 🌟 FIX 2: Physically click the box to force focus BEFORE typing!
+            print("🖱️ Forcing focus on text area...")
+            await box.click()
+            await asyncio.sleep(random.uniform(0.5, 1.2))
+            
+            # Type out the text (either just the reply, or the reply + link)
+            print("⌨️ Injecting text...")
+            await box.type(final_post_text, delay=random.randint(50, 150), timeout=90000)
+            
+            print("⏳ Waiting 40s for review...")
+            await asyncio.sleep(random.uniform(30, 45))
+
+            # Review window extension (if you start typing manually)
+            active = True
+            while active:
+                try:
+                    curr = await box.input_value()
+                    await asyncio.sleep(random.uniform(3.2, 6.8))
+                    new = await box.input_value()
+                    if curr != new:
+                        print("⌨️ User typing... +20s")
+                        await asyncio.sleep(random.uniform(15, 23))
+                    else: active = False
+                except Exception: active = False
+            
+            try:
+                submit = await page.wait_for_selector('[data-testid="tweetButton"]', timeout=3000)
+                await submit.click(force=True)
+                status = "Auto-submitted"
+            except Exception: 
+                status = "Manually submitted/edited"
+            
+            print(f"\n{'='*30}\n✅ POST COMPLETE\n💬 Output: {final_post_text}\n🤖 {status}\n{'='*30}\n")
+
+            # 🛑 THE MEMORY LOG: Save successful target URL so we don't scrape it again
+            log_path = os.path.expanduser("~/ironclaw_engaged_urls.log")
+            
+            with open(log_path, "a", encoding="utf-8") as f:
+                f.write(f"{clean_url}\n")
+
+            try:
+                with open(log_path, "r", encoding="utf-8") as f:
+                    lines = f.readlines()
+                if len(lines) > 200:
+                    with open(log_path, "w", encoding="utf-8") as f:
+                        f.writelines(lines[-200:]) 
+            except Exception as e:
+                print(f"Warning: Failed to prune memory log: {e}", file=sys.stderr)
             
             await context.close()
     except Exception as e:
@@ -175,8 +293,17 @@ if __name__ == '__main__':
             }))
             return
 
-        # 🌟 THE FIX: Unescape literal '\n' characters into real line breaks
-        reply_text = codecs.decode(reply_text, 'unicode_escape')
+        # reply_text = codecs.decode(reply_text, 'unicode_escape')
+
+        # 🌟 THE ENCODING SANITIZER 
+        # 1. Repair "Mojibake" (turns \u00e2\u0080\u0094 back into an em-dash)
+        try:
+            reply_text = reply_text.encode('latin-1').decode('utf-8')
+        except Exception:
+            pass
+            
+        # 2. Catch any lingering literal line breaks just in case
+        reply_text = reply_text.replace('\\n', '\n').replace('\\"', '"')
 
         # Get the account type from the environment (default to 'free')
         account_type = os.getenv("X_ACCOUNT_TYPE", "free")

@@ -20,7 +20,9 @@ import asyncio
 import sys
 import os
 import json
+import random
 from playwright.async_api import async_playwright
+# from playwright_stealth import stealth_async # 🌟 Add this import
 
 async def run_read(target_url):
     result = {"url": target_url, "post_text": "", "article_context": "No external link found."}
@@ -36,8 +38,22 @@ async def run_read(target_url):
             
             page = await context.new_page()
             print(f"▶️ Navigating to: {target_url}", file=sys.stderr)
+            # await stealth_async(page) # 🌟 Apply stealth BEFORE navigating!
+
+            # 🌟 THE FIX: Use triple single quotes (''') here!
+            await page.add_init_script('''
+                // 1. Hide the WebDriver flag
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                // 2. Mock the Chrome runtime object
+                window.navigator.chrome = { runtime: {} };
+                // 3. Mock languages and plugins
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            ''')
+
             await page.goto(target_url, wait_until="domcontentloaded")
-            await asyncio.sleep(4)
+            # await asyncio.sleep(4)
+            await asyncio.sleep(random.uniform(3.2, 6.8))
             
             # The main post is always the first <article> on a status page
             articles = await page.query_selector_all("article")
@@ -53,7 +69,9 @@ async def run_read(target_url):
                 btn = await main_article.query_selector('[data-testid="tweet-text-show-more-link"]')
                 if btn:
                     await btn.click(force=True)
-                    await asyncio.sleep(1)
+                    # await asyncio.sleep(1)
+                    await asyncio.sleep(random.uniform(1, 1.5))
+
             except Exception: pass
             
             result["post_text"] = await main_article.inner_text()
@@ -83,7 +101,8 @@ async def run_read(target_url):
                     new_tab = await context.new_page()
                     try:
                         await new_tab.goto(ext_url, timeout=15000, wait_until="domcontentloaded")
-                        await asyncio.sleep(4)
+                        # await asyncio.sleep(4)
+                        await asyncio.sleep(random.uniform(3.2, 6.8))
                         
                         article_data = await new_tab.evaluate('''() => {
                             let title = document.title;

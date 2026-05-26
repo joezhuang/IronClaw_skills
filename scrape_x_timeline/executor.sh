@@ -18,6 +18,7 @@ import sys
 import json
 import os
 import subprocess
+import random
 
 def run_task():
     try:
@@ -29,6 +30,7 @@ import os
 import sys
 import random
 from playwright.async_api import async_playwright
+# from playwright_stealth import stealth_async # 🌟 Add this import
 
 def get_feed_urls():
     news_lists = os.getenv('X_NEWS_LISTS')
@@ -62,17 +64,33 @@ async def run_scrape():
             )
             
             page = await context.new_page()
-            
+            # await stealth_async(page) # 🌟 Apply stealth BEFORE navigating!
+
+            # 🌟 THE FIX: Use triple single quotes (''') here!
+            await page.add_init_script('''
+                // 1. Hide the WebDriver flag
+                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                // 2. Mock the Chrome runtime object
+                window.navigator.chrome = { runtime: {} };
+                // 3. Mock languages and plugins
+                Object.defineProperty(navigator, 'languages', {get: () => ['en-US', 'en']});
+                Object.defineProperty(navigator, 'plugins', {get: () => [1, 2, 3, 4, 5]});
+            ''')
+
             feed_urls = get_feed_urls()
             chosen_feed = random.choice(feed_urls)
             print(f"🎯 Selected feed: {chosen_feed}")
             
             await page.goto(chosen_feed, wait_until="domcontentloaded")
-            await asyncio.sleep(4)
+            # await asyncio.sleep(4)
+            # Instead of sleep(4), wait anywhere between 3.2 and 6.8 seconds
+            await asyncio.sleep(random.uniform(3.2, 6.8))
             
             for _ in range(3):
                 await page.mouse.wheel(0, 900)
-                await asyncio.sleep(1.5)
+                # await asyncio.sleep(1.5)
+                # For scrolling or dismissing popups: wait between 1.1 and 2.4 seconds
+                await asyncio.sleep(random.uniform(1.1, 2.4))
             
             articles = await page.query_selector_all("article")
             if not articles:
