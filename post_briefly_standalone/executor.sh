@@ -17,6 +17,7 @@ import sys
 import os
 import json
 import random
+import re # 🌟 ADDED: Required for regex decoding
 from playwright.async_api import async_playwright
 
 async def run_publish(target_url, draft_text, image_path):
@@ -141,11 +142,26 @@ if __name__ == '__main__':
     # Safely unpack the JSON payload provided by the Go backend
     try:
         if raw_payload.strip().startswith('{'):
-            parsed = json.loads(raw_payload)
+            # strict=False helps prevent crashes if the AI sends raw newlines
+            parsed = json.loads(raw_payload, strict=False)
             target_url = parsed.get("target_url", "")
             post_text = parsed.get("post_text", "")
     except Exception:
         pass
+
+    # 🌟 THE ENCODING SANITIZER: Clean the text before it goes any further
+    if post_text:
+        # 1. Reverse double-escaped unicodes (e.g., \\u2019 becomes ’)
+        post_text = re.sub(r'\\u([0-9a-fA-F]{4})', lambda m: chr(int(m.group(1), 16)), post_text)
+        
+        # 2. Repair Mojibake (wrong byte decoding)
+        try:
+            post_text = post_text.encode('latin-1').decode('utf-8')
+        except Exception:
+            pass
+            
+        # 3. Translate literal \n text into actual line breaks
+        post_text = post_text.replace('\\n', '\n').replace('\\"', '"')
 
     # Ultimate fallback to environment variables
     if not target_url:
@@ -179,11 +195,12 @@ if __name__ == '__main__':
             print(f"⚠️ Janitor: Failed to delete temporary image - {e}", file=sys.stderr)
     
     if output.get("status") == "success":
+        # 🌟 ADDED ensure_ascii=False so emojis and smart quotes aren't re-escaped on output
         print(json.dumps({
             "status": "success",
             "data": f"✅ Successfully published to X: {target_url}\n\nPayload:\n{output.get('posted_text')}",
             "errors": ""
-        }))
+        }, ensure_ascii=False))
     else:
         print(json.dumps({"status": "error", "errors": output.get("errors", "Unknown worker failure.")}))
 EOF
