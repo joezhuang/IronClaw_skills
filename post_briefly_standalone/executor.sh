@@ -19,7 +19,7 @@ import json
 import random
 from playwright.async_api import async_playwright
 
-async def run_publish(target_url, draft_text):
+async def run_publish(target_url, draft_text, image_path):
     # 1. Pull the account type from your .env file
     account_type = os.environ.get("X_ACCOUNT_TYPE", "free").lower()
     max_chars = 280 if account_type == "free" else 25000
@@ -95,6 +95,13 @@ async def run_publish(target_url, draft_text):
             await page.click(editor_selector)
             await asyncio.sleep(0.5)
             
+            # 📸 NEW: Image Upload Logic
+            if image_path and os.path.exists(image_path):
+                print(f"🖼️ Attaching pure image payload: {image_path}", file=sys.stderr)
+                # Playwright securely bypasses the UI and attaches the file directly to the hidden input
+                await page.set_input_files('input[data-testid="fileInput"]', image_path)
+                await asyncio.sleep(3.0) # Give X time to process the media upload
+
             # Type the payload securely
             await page.fill(editor_selector, final_payload_text)
             await asyncio.sleep(random.uniform(1.5, 2.5))
@@ -129,6 +136,7 @@ if __name__ == '__main__':
 
     target_url = ""
     post_text = ""
+    image_path = ""
 
     # Safely unpack the JSON payload provided by the Go backend
     try:
@@ -145,11 +153,30 @@ if __name__ == '__main__':
     if not post_text:
         post_text = os.environ.get("post_text", "")
 
+    # Extract IMAGE_PATH and clean it out of the tweet body
+    search_target = raw_payload + "\n" + post_text
+    for line in search_target.split('\n'):
+        if line.startswith("IMAGE_PATH:"):
+            image_path = line.replace("IMAGE_PATH:", "").strip()
+            break
+            
+    # Remove the IMAGE_PATH line from the drafted text so we don't accidentally tweet the file path
+    if image_path and f"IMAGE_PATH: {image_path}" in post_text:
+        post_text = post_text.replace(f"IMAGE_PATH: {image_path}", "").strip()
+
     if not target_url or not post_text:
         print(json.dumps({"status": "error", "errors": "Fatal: Missing target_url or post_text parameter. The AI failed to map the URL."}))
         sys.exit(1)
 
-    output = asyncio.run(run_publish(target_url, post_text))
+    output = asyncio.run(run_publish(target_url, post_text, image_path))
+    
+    # 🧹 Janitor cleanup to delete the local image
+    if image_path and os.path.exists(image_path):
+        try:
+            os.remove(image_path)
+            print(f"🧹 Janitor: Successfully deleted temporary image {image_path}", file=sys.stderr)
+        except Exception as e:
+            print(f"⚠️ Janitor: Failed to delete temporary image - {e}", file=sys.stderr)
     
     if output.get("status") == "success":
         print(json.dumps({

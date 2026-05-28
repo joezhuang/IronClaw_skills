@@ -66,6 +66,22 @@ def run_draft():
         except Exception:
             pass
 
+        # Extract IMAGE_PATH cleanly
+        local_image_path = ""
+        try:
+            if raw_payload.strip().startswith('{'):
+                parsed_args = json.loads(raw_payload)
+                if "image_path" in parsed_args:
+                    local_image_path = parsed_args['image_path'].replace("IMAGE_PATH:", "").strip()
+        except Exception:
+            pass
+
+        if not local_image_path:
+            for line in article_context.split('\n'):
+                if line.startswith("IMAGE_PATH:"):
+                    local_image_path = line.replace("IMAGE_PATH:", "").strip()
+                    break
+
         if not clean_url:
             for line in article_context.split('\n'):
                 if line.startswith("TARGET_URL:"):
@@ -132,20 +148,23 @@ CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) 
             return
 
         # Output Construction: Places TARGET_URL perfectly back at the TOP of the data payload
+        # Output Construction: Places TARGET_URL and IMAGE_PATH perfectly back at the TOP
         if "</Thinking>" in cloud_draft:
             parts = cloud_draft.split("</Thinking>")
             thinking_block = parts[0] + "</Thinking>"
             raw_tweet = parts[1].strip()
             
-            if clean_url:
-                final_text = f"{thinking_block}\n\nTARGET_URL: {clean_url}\n\n--- FAST TRACK DRAFT ---\n{raw_tweet}"
-            else:
-                final_text = f"{thinking_block}\n\n--- FAST TRACK DRAFT ---\n{raw_tweet}"
+            final_text = f"{thinking_block}\n\n"
         else:
-            if clean_url:
-                final_text = f"TARGET_URL: {clean_url}\n\n--- FAST TRACK DRAFT ---\n{cloud_draft}"
-            else:
-                final_text = f"--- FAST TRACK DRAFT ---\n{cloud_draft}"
+            final_text = ""
+            raw_tweet = cloud_draft
+
+        if local_image_path:
+            final_text += f"IMAGE_PATH: {local_image_path}\n"
+        if clean_url:
+            final_text += f"TARGET_URL: {clean_url}\n"
+            
+        final_text += f"\n--- FAST TRACK DRAFT ---\n{raw_tweet}"
             
         print(json.dumps({"status": "success", "data": final_text, "errors": ""}))
 
