@@ -17,16 +17,16 @@ import os
 import json
 import urllib.request
 import time
+import re
 
 def call_openai_compat(model, endpoint, api_key, system_prompt, prompt_text):
-    """Handles both Google's OpenAI-compatible endpoint and OpenRouter."""
     payload = {
         "model": model,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": prompt_text}
         ],
-        "temperature": 0.4
+        "temperature": 0.3
     }
     headers = {
         'Content-Type': 'application/json',
@@ -47,7 +47,6 @@ def run_draft():
             print(json.dumps({"status": "error", "errors": "No payload provided."}))
             return
 
-        # Safely parse JSON payload from Go backend
         try:
             if raw_payload.strip().startswith('{'):
                 parsed_args = json.loads(raw_payload)
@@ -57,7 +56,7 @@ def run_draft():
         except Exception:
             article_context = raw_payload.strip()
 
-        # Extract URL for structural alignment with State 3 expectations
+        # MEMORY PATCH: Pull target URL cleanly out of the context stream
         clean_url = ""
         try:
             if raw_payload.strip().startswith('{'):
@@ -73,8 +72,8 @@ def run_draft():
                     clean_url = line.replace("TARGET_URL:", "").strip()
                     break
 
-        # 🧠 THE SYSTEM PROMPT MATRIX: Integrates the 9-Category/7-Persona engine
-        system_prompt = """You are the Briefly News engagement agent. You focus on objective, thought-provoking insights. Avoid shallow PR spin, but do not use aggressive, hostile roasts. You prefer to convince people using calm common sense. Strictly avoid AI buzzwords (delve, tapestry, crucial, robust).
+        # 🌟 BRIEFLY BROADCAST PROMPT: Tweaked to focus on standalone platform posting
+        system_prompt = """You are the Briefly News broadcast agent. Your job is to post an update to our X platform followers about a trending news cluster. You focus on objective, thought-provoking insights. Avoid shallow PR spin, but do not use aggressive, hostile roasts. You prefer to convince people using calm common sense. Strictly avoid AI buzzwords (delve, tapestry, crucial, robust).
         
 CRITICAL STEP 1: You MUST open a `<Thinking>` block on your very first line of output. Inside it, perform this analysis:
 - Category: Classify the article into [Geopolitics, Automotive, Tech, Markets, Startups, Media, Sports, Entertainment, General].
@@ -91,15 +90,13 @@ CRITICAL STEP 1: You MUST open a `<Thinking>` block on your very first line of o
 - Reasoning: State why you chose this in 1 short sentence.
 Close the block with `</Thinking>`.
 
-CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) using ONLY the chosen persona's voice. Keep it under 400 characters."""
+CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) using ONLY the chosen persona's voice. This is a standalone broadcast post hooking our readers. Keep it under 350 characters to allow room for the link reference."""
 
-        prompt_text = f"Read this article and draft the tweet:\n{article_context}"
+        prompt_text = f"Read this compiled news cluster and draft a standalone update tweet:\n{article_context}"
         
-        # Pull cloud environment configurations
         free_model = os.getenv("X_CLOUD_MODEL", "")
         free_endpoint = os.getenv("X_CLOUD_ENDPOINT", "")
         free_api_key = os.getenv("X_CLOUD_API_KEY", "")
-        
         paid_model = os.getenv("X_PAID_CLOUD_MODEL", "")
         paid_endpoint = os.getenv("X_PAID_CLOUD_ENDPOINT", "")
         paid_api_key = os.getenv("X_PAID_CLOUD_API_KEY", "")
@@ -108,7 +105,6 @@ CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) 
         max_attempts = 3
         draft_success = False
 
-        # --- TIER 1: Try Free API ---
         for attempt in range(max_attempts):
             try:
                 cloud_draft = call_openai_compat(free_model, free_endpoint, free_api_key, system_prompt, prompt_text)
@@ -116,12 +112,8 @@ CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) 
                 break 
             except Exception as e:
                 if attempt < max_attempts - 1:
-                    print(f"⚠️ [DEBUG] Free Tier ({free_model}) failed, retrying {attempt + 1}/{max_attempts}...")
                     time.sleep(3)
-                else:
-                    print(f"⚠️ [DEBUG] Free Tier failed completely: {str(e)}. Switching to PAID tier...")
 
-        # --- TIER 2: Try Paid API ---
         if not draft_success and paid_model and paid_api_key:
             for attempt in range(max_attempts):
                 try:
@@ -130,24 +122,16 @@ CRITICAL STEP 2: Write exactly 3 lines separated by double line breaks (\\n\\n) 
                     break
                 except Exception as e:
                     if attempt < max_attempts - 1:
-                        print(f"⚠️ [DEBUG] Paid Tier ({paid_model}) failed, retrying {attempt + 1}/{max_attempts}...")
                         time.sleep(3)
                     else:
-                        print(json.dumps({"status": "error", "errors": f"429: Cloud drafting failed on BOTH tiers. Last error: {str(e)}"}))
+                        print(json.dumps({"status": "error", "errors": f"429: Cloud drafting failed. Last error: {str(e)}"}))
                         return
                         
         if not draft_success:
-            print(json.dumps({"status": "error", "errors": "429: Free tier failed and Paid tier not configured."}))
+            print(json.dumps({"status": "error", "errors": "429: Cloud tiers failed or not configured."}))
             return
 
-        # Visual monitoring capture for pm2/terminal logs
-        print("\n" + "═"*50)
-        print("📝 [DEBUG] CLOUD MODEL DRAFT GENERATED:")
-        print("═"*50)
-        print(cloud_draft)
-        print("═"*50 + "\n")
-
-        # 6. STRUCTURAL ALIGNMENT: Formats output directly for State 3's regex hooks
+        # Output Construction: Places TARGET_URL perfectly back at the TOP of the data payload
         if "</Thinking>" in cloud_draft:
             parts = cloud_draft.split("</Thinking>")
             thinking_block = parts[0] + "</Thinking>"

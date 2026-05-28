@@ -1,0 +1,23 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "read_briefly",
+      "description": "CRITICAL TOOL. Scrapes and reads a Briefly news cluster URL. Must be loaded whenever the user asks to 'publish briefly' or 'publish news'.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "target_url": {
+            "type": "string",
+            "description": "The exact URL of the Briefly news cluster page to read."
+          }
+        },
+        "required": ["target_url"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true,
+    "auto_summarize": true
+  }
+}
