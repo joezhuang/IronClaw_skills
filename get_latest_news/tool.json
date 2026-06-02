@@ -1,1 +1,20 @@
-{"ironclaw_config":{"clean_context":false},"tool_schema":{"type":"function","function":{"name":"get_latest_news","description":"Fetches current news headlines and URLs for a specific topic using a live web search mechanism.","parameters":{"type":"object","properties":{"topic":{"type":"string","description":"The news topic or keyword to search for (e.g., 'Apple stock', 'SpaceX', 'local news')."}},"required":["topic"]}}}}
+{
+  "ironclaw_config": { "clean_context": false },
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "get_latest_news",
+      "description": "Fetches current news headlines and URLs for a specific topic using a live web search mechanism.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "topic": {
+            "type": "string",
+            "description": "The news topic or keyword to search for (e.g., 'Apple stock', 'SpaceX', 'local news')."
+          }
+        },
+        "required": ["topic"]
+      }
+    }
+  }
+}

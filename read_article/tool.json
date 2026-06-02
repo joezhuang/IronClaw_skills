@@ -2,14 +2,14 @@
   "tool_schema": {
     "type": "function",
     "function": {
-      "name": "read_briefly",
-      "description": "CRITICAL TOOL. Scrapes and reads a Briefly news cluster URL. Must be loaded whenever the user asks to 'publish briefly' or 'publish news'.",
+      "name": "read_article",
+      "description": "CRITICAL TOOL. Scrapes and reads any news article URL. Automatically detects if the link is a Briefly link or a direct external website link and extracts its core data.",
       "parameters": {
         "type": "object",
         "properties": {
           "target_url": {
             "type": "string",
-            "description": "The exact URL of the Briefly news cluster page to read."
+            "description": "The exact URL to scrape and read."
           }
         },
         "required": ["target_url"]

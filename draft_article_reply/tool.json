@@ -1,0 +1,23 @@
+{
+  "tool_schema": {
+    "type": "function",
+    "function": {
+      "name": "draft_article_reply",
+      "description": "Sends the extracted article text or a raw text to a high-intelligence Cloud LLM to draft a thought-provoking, analytical summary and response. Use this immediately after receiving the article context from the reading tool.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "article_context": {
+            "type": "string",
+            "description": "The exact text or summary extracted from the previous reading step."
+          }
+        },
+        "required": ["article_context"]
+      }
+    }
+  },
+  "ironclaw_config": {
+    "clean_context": true,
+    "auto_summarize": false
+  }
+}
